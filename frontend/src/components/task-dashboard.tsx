@@ -169,7 +169,7 @@ export function TaskDashboard({ initialTasks }: TaskDashboardProps) {
       <h1 className="mb-2 text-3xl font-semibold">Taskflow</h1>
       <div className="mb-8 flex items-center justify-between gap-4">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Create and view tasks from your FastAPI backend.
+          Create and view tasks from your FastAPI backend using Supabase.
         </p>
         <button
           className="rounded-md border border-zinc-300 px-3 py-1 text-sm dark:border-zinc-700"
