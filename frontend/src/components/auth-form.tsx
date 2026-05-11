@@ -14,6 +14,18 @@ type AuthFormProps = {
 
 type OAuthProvider = "github" | "google" | "slack" | "discord";
 
+function generatePrompt(provider: OAuthProvider): Record<string, string> {
+  if (provider === "google") {
+    return { prompt: "select_account" };
+  }
+
+  if (provider === "github") {
+    return { login: "login" };
+  }
+
+  return {};
+}
+
 function GithubIcon() {
   return (
     <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24">
@@ -160,6 +172,9 @@ export function AuthForm({ mode }: AuthFormProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
+          queryParams: {
+            ...generatePrompt(provider),
+          },
           redirectTo: `${window.location.origin}/dashboard`,
         },
       });
