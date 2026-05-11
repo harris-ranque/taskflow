@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { NotificationsProvider } from "@/components/notifications";
 
 export const metadata: Metadata = {
   title: "Taskflow Frontend",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <NotificationsProvider>{children}</NotificationsProvider>
+      </body>
     </html>
   );
 }

@@ -3,10 +3,40 @@ import { NextRequest, NextResponse } from "next/server";
 const API_BASE_URL =
   process.env.BACKEND_URL?.replace(/\/+$/, "") ?? "http://127.0.0.1:8000";
 
-export async function GET() {
+function getAuthHeader(request: NextRequest): string | null {
+  const authorization = request.headers.get("authorization");
+  return authorization && authorization.toLowerCase().startsWith("bearer ")
+    ? authorization
+    : null;
+}
+
+function extractRows(payload: unknown): unknown {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (payload && typeof payload === "object" && "data" in payload) {
+    const data = (payload as { data?: unknown }).data;
+    return Array.isArray(data) ? data : [];
+  }
+
+  return [];
+}
+
+export async function GET(request: NextRequest) {
   try {
+    const authHeader = getAuthHeader(request);
+
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Missing Authorization header" },
+        { status: 401 },
+      );
+    }
+
     const response = await fetch(`${API_BASE_URL}/tasks`, {
       cache: "no-store",
+      headers: { Authorization: authHeader },
     });
     const payload = await response.json().catch(() => []);
 
@@ -17,7 +47,7 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json(payload);
+    return NextResponse.json(extractRows(payload));
   } catch (error) {
     return NextResponse.json(
       {
@@ -31,11 +61,23 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const authHeader = getAuthHeader(request);
+
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Missing Authorization header" },
+        { status: 401 },
+      );
+    }
+
     const body = await request.json();
 
     const response = await fetch(`${API_BASE_URL}/tasks`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+      },
       body: JSON.stringify(body),
     });
     const payload = await response.json().catch(() => ({}));

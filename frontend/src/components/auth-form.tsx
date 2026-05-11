@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { useNotifications } from "@/components/notifications";
 import { supabase } from "@/lib/supabase-browser";
 
 type AuthMode = "login" | "signup";
@@ -13,6 +14,7 @@ type AuthFormProps = {
 
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
+  const { notify } = useNotifications();
 
   useEffect(() => {
     let mounted = true;
@@ -38,16 +40,12 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const isSignup = mode === "signup";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setMessage(null);
-    setError(null);
 
     try {
       if (isSignup) {
@@ -68,7 +66,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           return;
         }
 
-        setMessage("Signup successful. Please login to continue.");
+        notify("Signup successful. Please login to continue.", { type: "success" });
       } else {
         const { data, error: loginError } =
           await supabase.auth.signInWithPassword({
@@ -87,12 +85,12 @@ export function AuthForm({ mode }: AuthFormProps) {
           return;
         }
 
-        setError("Login succeeded but no active session was returned.");
+        notify("Login succeeded but no active session was returned.", { type: "error" });
       }
     } catch (submitError) {
-      setError(
-        submitError instanceof Error ? submitError.message : "Unknown error",
-      );
+      notify(submitError instanceof Error ? submitError.message : "Unknown error", {
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -140,17 +138,6 @@ export function AuthForm({ mode }: AuthFormProps) {
                 : "Login"}
           </button>
         </form>
-
-        {message && (
-          <p className="mt-3 rounded-md bg-green-100 px-3 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">
-            {message}
-          </p>
-        )}
-        {error && (
-          <p className="mt-3 rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-            {error}
-          </p>
-        )}
 
         <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
           {isSignup ? "Already have an account? " : "Need an account? "}

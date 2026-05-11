@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useNotifications } from "@/components/notifications";
 import { supabase } from "@/lib/supabase-browser";
 
 export type Task = {
   id?: string | number;
+  user_id?: string;
   title: string;
   description: string;
 };
@@ -14,43 +16,78 @@ type TaskDashboardProps = {
   initialTasks: Task[];
 };
 
+function normalizeTasks(payload: unknown): Task[] {
+  if (Array.isArray(payload)) {
+    return payload as Task[];
+  }
+
+  if (payload && typeof payload === "object" && "data" in payload) {
+    const data = (payload as { data?: unknown }).data;
+    return Array.isArray(data) ? (data as Task[]) : [];
+  }
+
+  return [];
+}
+
+async function getAccessToken(): Promise<string> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error("No active session found. Please log in again.");
+  }
+
+  return session.access_token;
+}
+
 export function TaskDashboard({ initialTasks }: TaskDashboardProps) {
   const router = useRouter();
+  const { notify } = useNotifications();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(initialTasks.length === 0);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | number | null>(null);
 
-  async function fetchTasks() {
+  const fetchTasks = useCallback(async () => {
     setLoading(true);
-    setError(null);
 
     try {
-      const response = await fetch("/api/tasks", { cache: "no-store" });
+      const token = await getAccessToken();
+      const response = await fetch("/api/tasks", {
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (!response.ok) {
         throw new Error("Failed to load tasks");
       }
 
       const data = await response.json();
-      setTasks(Array.isArray(data) ? data : []);
+      setTasks(normalizeTasks(data));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      notify(err instanceof Error ? err.message : "Unknown error", { type: "error" });
     } finally {
       setLoading(false);
     }
-  }
+  }, [notify]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
-    setError(null);
 
     try {
+      const token = await getAccessToken();
+
       const response = await fetch("/api/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ title, description }),
       });
 
@@ -61,24 +98,56 @@ export function TaskDashboard({ initialTasks }: TaskDashboardProps) {
 
       setTitle("");
       setDescription("");
+      notify("Task created successfully.", { type: "success" });
       await fetchTasks();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      notify(err instanceof Error ? err.message : "Unknown error", { type: "error" });
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleLogout() {
-    setError(null);
     const { error: signOutError } = await supabase.auth.signOut();
 
     if (signOutError) {
-      setError(signOutError.message);
+      notify(signOutError.message, { type: "error" });
       return;
     }
 
+    notify("Logged out successfully.", { type: "success" });
     router.replace("/login");
+  }
+
+  async function handleDeleteTask(taskId: string | number | undefined) {
+    if (taskId === undefined) {
+      notify("This task cannot be deleted because it has no id.", { type: "error" });
+      return;
+    }
+
+    setDeletingTaskId(taskId);
+
+    try {
+      const token = await getAccessToken();
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error ?? "Failed to delete task");
+      }
+
+      notify("Task deleted successfully.", { type: "success" });
+      await fetchTasks();
+    } catch (err) {
+      notify(err instanceof Error ? err.message : "Unknown error", { type: "error" });
+    } finally {
+      setDeletingTaskId(null);
+    }
   }
 
   useEffect(() => {
@@ -86,37 +155,14 @@ export function TaskDashboard({ initialTasks }: TaskDashboardProps) {
       return;
     }
 
-    let cancelled = false;
-
-    void fetch("/api/tasks", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("Failed to load tasks");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (cancelled) {
-          return;
-        }
-        setTasks(Array.isArray(data) ? data : []);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) {
-          return;
-        }
-        setError(err instanceof Error ? err.message : "Unknown error");
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
+    const timer = setTimeout(() => {
+      void fetchTasks();
+    }, 0);
 
     return () => {
-      cancelled = true;
+      clearTimeout(timer);
     };
-  }, [initialTasks.length]);
+  }, [fetchTasks, initialTasks.length]);
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-10">
@@ -174,12 +220,6 @@ export function TaskDashboard({ initialTasks }: TaskDashboardProps) {
           </button>
         </div>
 
-        {error && (
-          <p className="mb-3 rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-            {error}
-          </p>
-        )}
-
         {loading ? (
           <p className="text-sm text-zinc-500">Loading tasks...</p>
         ) : tasks.length === 0 ? (
@@ -191,10 +231,22 @@ export function TaskDashboard({ initialTasks }: TaskDashboardProps) {
                 className="rounded-md border border-zinc-200 p-3 dark:border-zinc-800"
                 key={task.id ?? `${task.title}-${index}`}
               >
-                <p className="font-medium">{task.title}</p>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {task.description}
-                </p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{task.title}</p>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      {task.description}
+                    </p>
+                  </div>
+                  <button
+                    className="rounded-md border border-red-300 px-3 py-1 text-xs text-red-700 disabled:opacity-50 dark:border-red-900 dark:text-red-300"
+                    disabled={deletingTaskId === task.id}
+                    onClick={() => void handleDeleteTask(task.id)}
+                    type="button"
+                  >
+                    {deletingTaskId === task.id ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
