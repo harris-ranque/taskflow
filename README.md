@@ -68,6 +68,105 @@ npm run dev
 
 Frontend runs at `http://localhost:3000`.
 
+## Complete GitHub OAuth Flow with Next.js + Supabase
+
+Architecture:
+
+Next.js frontend
+↓
+Supabase Auth
+↓
+GitHub OAuth
+↓
+Supabase session/JWT
+↓
+Dashboard
+↓
+FastAPI backend (optional)
+
+### Step 1 - Enable GitHub Provider in Supabase
+
+Open Supabase Dashboard, then go to:
+
+- Authentication
+- Providers
+- GitHub
+
+Enable the GitHub provider.
+
+Keep this page open because you will paste:
+
+- Client ID
+- Client Secret
+
+later.
+
+### Step 2 - Create GitHub OAuth App
+
+Open:
+
+- GitHub Developer Settings OAuth Apps
+
+Then click:
+
+- New OAuth App
+
+### Step 3 - Fill GitHub OAuth App
+
+Application name:
+
+- Taskflow Dev
+
+Homepage URL (development):
+
+- `http://localhost:3000`
+
+Authorization callback URL:
+
+- `https://ronvhnxctpkvhzpwcewq.supabase.co/auth/v1/callback`
+
+Important: use your Supabase callback URL, not your Next.js route.
+
+### Step 4 - Copy GitHub Credentials
+
+After creating the app, GitHub gives you:
+
+- Client ID
+- Client Secret
+
+Copy both values.
+
+### Step 5 - Paste into Supabase
+
+Go back to:
+
+- Supabase
+- Authentication
+- Providers
+- GitHub
+
+Paste:
+
+- Client ID
+- Client Secret
+
+Then save.
+
+### Step 6 - Configure Supabase URLs
+
+Go to:
+
+- Authentication
+- URL Configuration
+
+Set:
+
+- Site URL
+  - `http://localhost:3000`
+
+- Redirect URLs
+  - `http://localhost:3000/auth/callback`
+
 ## Google OAuth Setup (Supabase)
 
 Use this exact configuration to make Google login work with Supabase.
