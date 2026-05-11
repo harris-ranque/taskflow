@@ -5,6 +5,22 @@ Full-stack task app with:
 - Next.js frontend
 - Supabase Auth + Postgres (with RLS)
 
+## Menu
+
+- [Project Structure](#project-structure)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Environment Variables](#environment-variables)
+  - [Backend (`.env` in repo root)](#backend-env-in-repo-root)
+  - [Frontend (`frontend/.env`)](#frontend-frontendenv)
+- [Install & Run](#install--run)
+- [Complete GitHub OAuth Flow with Next.js + Supabase](#complete-github-oauth-flow-with-nextjs--supabase)
+- [Slack OAuth Setup (Supabase)](#slack-oauth-setup-supabase)
+- [Google OAuth Setup (Supabase)](#google-oauth-setup-supabase)
+- [API Endpoints (Backend)](#api-endpoints-backend)
+- [Auth + RLS Flow](#auth--rls-flow)
+- [Notes](#notes)
+
 ## Project Structure
 
 - `app/` - FastAPI backend
@@ -167,6 +183,111 @@ Set:
 - Redirect URLs
   - `http://localhost:3000/auth/callback`
 
+
+## Slack OAuth Setup (Supabase)
+
+Overall Flow
+
+Next.js (login button)
+↓
+Supabase Auth
+↓
+Slack OAuth screen (workspace + permissions)
+↓
+Slack redirects to Supabase callback
+↓
+Supabase creates session (JWT)
+↓
+Next.js receives session
+↓
+Redirect -> `/dashboard`
+
+### 1. Create Slack App
+
+Go to:
+
+- Slack API Apps
+
+Click:
+
+- Create New App
+- From scratch
+
+### 2. Choose Workspace
+
+Pick your Slack workspace (or dev workspace).
+
+### 3. Enable OAuth
+
+Go to:
+
+- OAuth & Permissions
+
+### 4. Add Redirect URL (VERY IMPORTANT)
+
+Slack expects Supabase callback:
+
+- `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
+
+For this project:
+
+- `https://ronvhnxctpkvhzpwcewq.supabase.co/auth/v1/callback`
+
+Add it under:
+
+- Redirect URLs
+
+### 5. Add Scopes
+
+Typical scopes:
+
+- `openid`
+- `email`
+- `profile`
+
+Optional (depending on app):
+
+- `chat:write`
+- `users:read`
+- `channels:read`
+
+### 6. Get Client ID + Secret
+
+From:
+
+- Basic Information
+
+Copy:
+
+- Client ID
+- Client Secret
+
+### 7. Configure Supabase Slack Provider
+
+Go to:
+
+- Supabase Dashboard
+- Authentication -> Providers -> Slack
+
+Enable Slack and paste:
+
+- Client ID
+- Client Secret
+
+Save.
+
+### 8. Set Supabase Auth URLs
+
+Go to:
+
+- Authentication -> URL Configuration
+
+Set:
+
+- Site URL
+  - `http://localhost:3000`
+- Redirect URLs
+  - `http://localhost:3000/auth/callback`
 
 ## Google OAuth Setup (Supabase)
 
