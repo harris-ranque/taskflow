@@ -68,6 +68,68 @@ npm run dev
 
 Frontend runs at `http://localhost:3000`.
 
+## Google OAuth Setup (Supabase)
+
+Use this exact configuration to make Google login work with Supabase.
+
+### 1) Google Cloud Console: OAuth Client
+
+Set these values in your Google OAuth client:
+
+- **Authorized JavaScript origins**
+  - `http://localhost:3000`
+  - `https://yourdomain.com` (when deployed)
+
+- **Authorized redirect URIs**
+  - `https://ronvhnxctpkvhzpwcewq.supabase.co/auth/v1/callback`
+
+Important: for Supabase OAuth, Google redirect URI must point to the Supabase callback endpoint (`...supabase.co/auth/v1/callback`), not your frontend URL.
+
+### 2) Supabase Dashboard: URL Configuration
+
+Go to:
+
+- Authentication -> URL Configuration
+
+Set:
+
+- **Site URL**
+  - `http://localhost:3000`
+
+- **Redirect URLs** (allow list)
+  - `http://localhost:3000/auth/callback`
+  - `http://localhost:3000/dashboard` (optional)
+
+### 3) Next.js Google Login Call
+
+```ts
+await supabase.auth.signInWithOAuth({
+  provider: "google",
+  options: {
+    redirectTo: "http://localhost:3000/auth/callback",
+  },
+});
+```
+
+### Common OAuth Mistake
+
+Do **not** put `http://localhost:3000/auth/callback` into Google's "Authorized redirect URIs".
+
+For Supabase OAuth, Google should redirect to:
+
+- `https://ronvhnxctpkvhzpwcewq.supabase.co/auth/v1/callback`
+
+Then Supabase creates the session and redirects back to your app (`redirectTo` / Site URL).
+
+### OAuth Flow Visualization
+
+1. Next.js app user clicks Google login.
+2. User completes Google OAuth consent.
+3. Google redirects to Supabase callback (`...supabase.co/auth/v1/callback`).
+4. Supabase creates session.
+5. Supabase redirects back to your Next.js app.
+6. User is logged in.
+
 ## API Endpoints (Backend)
 
 - `GET /health`
