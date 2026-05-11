@@ -12,7 +12,7 @@ type AuthFormProps = {
   mode: AuthMode;
 };
 
-type OAuthProvider = "github" | "google" | "slack" | "discord";
+type OAuthProvider = "github" | "google" | "slack_oidc" | "discord";
 
 function generatePrompt(provider: OAuthProvider): Record<string, string> {
   if (provider === "google") {
@@ -22,7 +22,6 @@ function generatePrompt(provider: OAuthProvider): Record<string, string> {
   if (provider === "github") {
     return { login: "login" };
   }
-
   return {};
 }
 
@@ -278,7 +277,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             <button
               className="flex items-center justify-center gap-2 rounded-md border border-zinc-300 px-3 py-2 text-sm disabled:opacity-50 dark:border-zinc-700"
               disabled={loading}
-              onClick={() => void handleOAuthLogin("slack")}
+              onClick={() => void handleOAuthLogin("slack_oidc")}
               type="button"
             >
               <SlackIcon />

@@ -167,6 +167,7 @@ Set:
 - Redirect URLs
   - `http://localhost:3000/auth/callback`
 
+
 ## Google OAuth Setup (Supabase)
 
 Use this exact configuration to make Google login work with Supabase.
