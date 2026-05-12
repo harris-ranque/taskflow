@@ -112,6 +112,20 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const isSignup = mode === "signup";
 
+  async function queueWelcomeEmail(accessToken: string): Promise<void> {
+    const response = await fetch("/api/email/welcome", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      throw new Error(payload?.error ?? "Failed to queue welcome email");
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -131,6 +145,16 @@ export function AuthForm({ mode }: AuthFormProps) {
           data.session ?? (await supabase.auth.getSession()).data.session;
 
         if (session) {
+          try {
+            await queueWelcomeEmail(session.access_token);
+          } catch (welcomeEmailError) {
+            notify(
+              welcomeEmailError instanceof Error
+                ? welcomeEmailError.message
+                : "Failed to queue welcome email",
+              { type: "error" },
+            );
+          }
           router.replace("/dashboard");
           return;
         }
