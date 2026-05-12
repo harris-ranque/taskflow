@@ -15,6 +15,7 @@ Full-stack task app with:
   - [Frontend (`frontend/.env`)](#frontend-frontendenv)
 - [Install & Run](#install--run)
 - [Docker (backend API)](#docker-backend-api)
+- [Deploy to Railway (CI/CD)](#deploy-to-railway-cicd)
 - [Complete GitHub OAuth Flow with Next.js + Supabase](#complete-github-oauth-flow-with-nextjs--supabase)
 - [Slack OAuth Setup (Supabase)](#slack-oauth-setup-supabase)
 - [Google OAuth Setup (Supabase)](#google-oauth-setup-supabase)
@@ -140,6 +141,39 @@ docker run -p 8000:8000 task-api
 ```
 
 The API listens on `http://127.0.0.1:8000`. Pass the same variables as in [Backend (`.env` in repo root)](#backend-env-in-repo-root) (for example `--env-file .env`) so the container can reach Supabase and Redis.
+
+## Deploy to Railway (CI/CD)
+
+This repo includes a GitHub Actions workflow at `.github/workflows/deploy.yaml` for Railway redeploys.
+
+### What the pipeline does
+
+- Triggers automatically on push to `main`.
+- Supports manual run via GitHub Actions (`workflow_dispatch`).
+- Uses a concurrency group (`railway-deploy-${{ github.ref }}`) to avoid overlapping deploys.
+- Installs Railway CLI and runs:
+
+```bash
+railway up --detach
+```
+
+### Required GitHub secret
+
+Add this repository secret before using the workflow:
+
+- `RAILWAY_TOKEN` - Railway API token used by GitHub Actions.
+
+### Setup checklist
+
+1. Create a Railway project and link/deploy your service at least once.
+2. In GitHub: **Settings -> Secrets and variables -> Actions -> New repository secret**.
+3. Add `RAILWAY_TOKEN`.
+4. Push to `main` to trigger auto redeploy, or run the workflow manually from the **Actions** tab.
+
+### Notes
+
+- Keep runtime app variables (`SUPABASE_URL`, `SUPABASE_KEY`, `SENDGRID_API_KEY`, etc.) in Railway service environment variables.
+- If deployment fails, check the GitHub Actions logs for the `Deploy to Railway` step.
 
 ## Complete GitHub OAuth Flow with Next.js + Supabase
 
