@@ -88,7 +88,7 @@ taskflow/
 
 ## UI Preview
 
-![Taskflow login screen](/home/bmd/.cursor/projects/home-bmd-MyProjects-taskflow/assets/c__Users_BMD_AppData_Roaming_Cursor_User_workspaceStorage_71719935a89a0ac9543c7b65573d36e2_images_Screenshot_1-7d47ee39-7c6d-4b30-a5ab-368f510d3eba.png)
+![Taskflow login screen](docs/images/login-screen.png)
 
 ## Production Architecture
 
