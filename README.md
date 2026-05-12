@@ -14,6 +14,7 @@ Full-stack task app with:
   - [Backend (`.env` in repo root)](#backend-env-in-repo-root)
   - [Frontend (`frontend/.env`)](#frontend-frontendenv)
 - [Install & Run](#install--run)
+- [Docker (backend API)](#docker-backend-api)
 - [Complete GitHub OAuth Flow with Next.js + Supabase](#complete-github-oauth-flow-with-nextjs--supabase)
 - [Slack OAuth Setup (Supabase)](#slack-oauth-setup-supabase)
 - [Google OAuth Setup (Supabase)](#google-oauth-setup-supabase)
@@ -83,6 +84,24 @@ npm run dev
 ```
 
 Frontend runs at `http://localhost:3000`.
+
+## Docker (backend API)
+
+From the **repository root** (where the `Dockerfile` is):
+
+### — Build Docker image
+
+```bash
+docker build -t task-api .
+```
+
+### — Run container
+
+```bash
+docker run -p 8000:8000 task-api
+```
+
+The API listens on `http://127.0.0.1:8000`. Pass the same variables as in [Backend (`.env` in repo root)](#backend-env-in-repo-root) (for example `--env-file .env`) so the container can reach Supabase and Redis.
 
 ## Complete GitHub OAuth Flow with Next.js + Supabase
 
