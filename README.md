@@ -53,6 +53,11 @@ SUPABASE_URL=your-supabase-url
 SUPABASE_KEY=your-supabase-anon-or-publishable-key
 REDIS_HOST=localhost
 REDIS_PORT=6379
+
+# Transactional email (SendGrid — Web API v3)
+SENDGRID_API_KEY=your-sendgrid-api-key
+# Verified sender or domain in SendGrid
+EMAIL_FROM=noreply@yourdomain.com
 ```
 
 ### Frontend (`frontend/.env`)
@@ -74,6 +79,39 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Backend listens on port **8000** — open `http://127.0.0.1:8000` on this machine (`0.0.0.0` binds on all interfaces, e.g. for LAN access or Docker port mapping).
+
+**Email worker (RQ):** with Redis running, `SENDGRID_API_KEY`, and a verified `EMAIL_FROM`, process the `emails` queue from the repo root:
+
+```bash
+uv run rq worker emails --url redis://127.0.0.1:6379/0
+```
+
+Enqueue from app code with `enqueue_send_email(...)` in `app/worker/email_worker.py`.
+
+```python
+from app.worker.email_worker import enqueue_send_email
+
+# Standard subject/body email
+enqueue_send_email(
+    to_email="user@example.com",
+    subject="Welcome to Taskflow",
+    body_text="Thanks for joining Taskflow.",
+    body_html="<p>Thanks for joining <strong>Taskflow</strong>.</p>",
+)
+
+# SendGrid dynamic template email
+enqueue_send_email(
+    to_email="user@example.com",
+    template_id="d-1234567890abcdef1234567890abcdef",
+    dynamic_template_data={"first_name": "Ada"},
+)
+```
+
+Worker behavior from `app/worker/email_worker.py`:
+- Queue name is `emails`.
+- If `template_id` is provided, template content/subject comes from SendGrid.
+- If `template_id` is not provided, `subject` is required and at least one of `body_text` or `body_html` must be provided.
+- Non-2xx SendGrid responses raise an error so the RQ job can retry/fail visibly.
 
 ### 2) Frontend
 

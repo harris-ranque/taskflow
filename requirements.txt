@@ -4,3 +4,4 @@ supabase
 python-dotenv
 redis>=5.0.0
 rq
+sendgrid>=6.11.0

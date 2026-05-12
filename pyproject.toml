@@ -9,6 +9,23 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "redis>=7.4.0",
     "rq>=2.8.0",
+    "sendgrid>=6.11.0",
     "supabase>=2.30.0",
     "uvicorn>=0.46.0",
 ]
+
+# Pylance / Pyright / basedpyright: resolve third-party imports from the uv-managed venv
+# (some IDE setups do not auto-detect .venv; extraPaths makes site-packages explicit).
+[tool.pyright]
+include = ["app"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+extraPaths = [".venv/lib/python3.12/site-packages"]
+
+[tool.basedpyright]
+include = ["app"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+extraPaths = [".venv/lib/python3.12/site-packages"]
