@@ -38,7 +38,8 @@ Full-stack task app with:
 
 ## Prerequisites
 
-- Python 3.10+
+- Python 3.12+ (see `pyproject.toml`)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) (Python toolchain; installs deps from `pyproject.toml` when you `uv run`)
 - Node.js 20+
 - npm
 - Supabase project
@@ -66,14 +67,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-or-publishable-key
 
 ### 1) Backend
 
+From the **repository root** (where `app/` and `pyproject.toml` live):
+
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Backend runs at `http://127.0.0.1:8000`.
+Backend listens on port **8000** — open `http://127.0.0.1:8000` on this machine (`0.0.0.0` binds on all interfaces, e.g. for LAN access or Docker port mapping).
 
 ### 2) Frontend
 
