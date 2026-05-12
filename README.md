@@ -9,6 +9,13 @@ Full-stack task app with:
 
 - [Project Structure](#project-structure)
 - [Features](#features)
+- [Production Architecture](#production-architecture)
+  - [API Layer](#api-layer)
+  - [Database](#database)
+  - [Queue System and Background Jobs](#queue-system-and-background-jobs)
+  - [Containers](#containers)
+  - [Deployment](#deployment)
+  - [CI/CD Pipeline](#cicd-pipeline)
 - [Prerequisites](#prerequisites)
 - [Environment Variables](#environment-variables)
   - [Backend (`.env` in repo root)](#backend-env-in-repo-root)
@@ -36,6 +43,48 @@ Full-stack task app with:
 - List tasks (scoped to logged-in user)
 - Delete tasks
 - Toast notifications (top-right)
+
+## Production Architecture
+
+This project uses a production-style split between frontend, API, data, async jobs, and deployment automation.
+
+### API Layer
+
+- **Backend API:** FastAPI app in `app/main.py` with routes in `app/routes/tasks.py`.
+- **Frontend API boundary:** Next.js route handlers in `frontend/src/app/api/**` proxy requests to the backend (`BACKEND_URL`), keeping browser clients decoupled from internal backend URLs.
+- **Auth propagation:** Supabase access token is sent as `Authorization: Bearer <token>` from frontend to backend endpoints.
+
+### Database
+
+- **Primary data/auth platform:** Supabase (Postgres + Auth + RLS).
+- **User scoping:** Backend resolves authenticated user from JWT and applies user-scoped queries in service layer (`app/services/task_service.py`).
+- **Data integrity model:** `user_id` is derived server-side, not trusted from client payloads.
+
+### Queue System and Background Jobs
+
+- **Queue backend:** Redis.
+- **Job runner:** RQ workers.
+- **Current async workload:** transactional email via SendGrid in `app/worker/email_worker.py`.
+- **Trigger path:** frontend action -> Next.js API route -> FastAPI endpoint -> RQ enqueue -> worker sends email.
+
+### Containers
+
+- **Backend containerization:** `Dockerfile` builds API image and runs Uvicorn on port `8000`.
+- **Runtime env injection:** pass environment values at container start (`--env-file .env` recommended).
+- **Operational pattern:** containerized API process + separately managed Redis / worker process for async jobs.
+
+### Deployment
+
+- **Target platform:** Railway.
+- **Deploy behavior:** pushes to `main` (or manual workflow runs) trigger automatic redeploy.
+- **Config management:** application secrets and runtime config should be stored in Railway environment variables, not committed files.
+
+### CI/CD Pipeline
+
+- **Workflow file:** `.github/workflows/deploy.yaml`.
+- **Trigger events:** `push` to `main` and `workflow_dispatch`.
+- **Deploy mechanism:** GitHub Actions installs Railway CLI and runs `railway up --detach`.
+- **Safety control:** workflow concurrency prevents overlapping deploy runs per branch ref.
 
 ## Prerequisites
 
