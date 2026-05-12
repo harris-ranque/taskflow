@@ -1,6 +1,7 @@
 # Taskflow
 
 Full-stack task app with:
+
 - FastAPI backend
 - Next.js frontend
 - Supabase Auth + Postgres (with RLS)
@@ -85,6 +86,10 @@ taskflow/
 - Delete tasks
 - Toast notifications (top-right)
 
+## UI Preview
+
+![Taskflow login screen](/home/bmd/.cursor/projects/home-bmd-MyProjects-taskflow/assets/c__Users_BMD_AppData_Roaming_Cursor_User_workspaceStorage_71719935a89a0ac9543c7b65573d36e2_images_Screenshot_1-7d47ee39-7c6d-4b30-a5ab-368f510d3eba.png)
+
 ## Production Architecture
 
 This project uses a production-style split between frontend, API, data, async jobs, and deployment automation.
@@ -92,7 +97,7 @@ This project uses a production-style split between frontend, API, data, async jo
 ### API Layer
 
 - **Backend API:** FastAPI app in `app/main.py` with routes in `app/routes/tasks.py`.
-- **Frontend API boundary:** Next.js route handlers in `frontend/src/app/api/**` proxy requests to the backend (`BACKEND_URL`), keeping browser clients decoupled from internal backend URLs.
+- **Frontend API boundary:** Next.js route handlers in `frontend/src/app/api/`** proxy requests to the backend (`BACKEND_URL`), keeping browser clients decoupled from internal backend URLs.
 - **Auth propagation:** Supabase access token is sent as `Authorization: Bearer <token>` from frontend to backend endpoints.
 
 ### Database
@@ -199,6 +204,7 @@ enqueue_send_email(
 ```
 
 Worker behavior from `app/worker/email_worker.py`:
+
 - Queue name is `emails`.
 - If `template_id` is provided, template content/subject comes from SendGrid.
 - If `template_id` is not provided, `subject` is required and at least one of `body_text` or `body_html` must be provided.
@@ -360,10 +366,8 @@ Set:
 
 - Site URL
   - `http://localhost:3000`
-
 - Redirect URLs
   - `http://localhost:3000/auth/callback`
-
 
 ## Slack OAuth Setup (Supabase)
 
@@ -481,7 +485,6 @@ Set these values in your Google OAuth client:
 - **Authorized JavaScript origins**
   - `http://localhost:3000`
   - `https://yourdomain.com` (when deployed)
-
 - **Authorized redirect URIs**
   - `https://ronvhnxctpkvhzpwcewq.supabase.co/auth/v1/callback`
 
@@ -497,7 +500,6 @@ Set:
 
 - **Site URL**
   - `http://localhost:3000`
-
 - **Redirect URLs** (allow list)
   - `http://localhost:3000/auth/callback`
   - `http://localhost:3000/dashboard` (optional)
@@ -553,3 +555,4 @@ Then Supabase creates the session and redirects back to your app (`redirectTo` /
 - `user_id` is derived on backend from JWT, not trusted from frontend payload.
 - Task reads/deletes are user-scoped.
 - If signup does not auto-login, confirm your Supabase email confirmation settings.
+
