@@ -35,6 +35,47 @@ Full-stack task app with:
 - `app/` - FastAPI backend
 - `frontend/` - Next.js 16 frontend (App Router)
 
+```text
+taskflow/
+├── app/
+│   ├── routes/
+│   │   └── tasks.py
+│   ├── schemas/
+│   │   ├── email.py
+│   │   └── task.py
+│   ├── services/
+│   │   ├── email_service.py
+│   │   └── task_service.py
+│   ├── worker/
+│   │   └── email_worker.py
+│   ├── config.py
+│   ├── database.py
+│   └── main.py
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── api/
+│   │   │   │   ├── email/welcome/route.ts
+│   │   │   │   └── tasks/
+│   │   │   ├── dashboard/page.tsx
+│   │   │   ├── login/page.tsx
+│   │   │   └── signup/page.tsx
+│   │   ├── components/
+│   │   │   ├── auth-form.tsx
+│   │   │   └── task-dashboard.tsx
+│   │   └── lib/
+│   │       └── supabase-browser.ts
+│   └── package.json
+├── .github/
+│   └── workflows/
+│       └── deploy.yaml
+├── Dockerfile
+├── README.md
+├── pyproject.toml
+├── requirements.txt
+└── uv.lock
+```
+
 ## Features
 
 - Email/password signup + login (Supabase Auth)
